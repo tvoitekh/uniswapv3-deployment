@@ -84,7 +84,7 @@ async function main() {
 }
 
 /*
-  npx hardhat run --network localhost scripts/03_deployPools.js
+  npx hardhat run --network zircuit scripts/03_deployPools.js
 */
 
 

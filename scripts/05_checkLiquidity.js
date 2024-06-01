@@ -33,7 +33,7 @@ async function main() {
 
 
 /*
-  npx hardhat run --network localhost scripts/05_checkLiquidity.js
+  npx hardhat run --network zircuit scripts/05_checkLiquidity.js
 */
 
 main()

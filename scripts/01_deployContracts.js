@@ -104,7 +104,7 @@ async function main() {
 }
 
 /*
-npx hardhat run --network localhost scripts/01_deployContracts.js
+npx hardhat run --network zircuit scripts/01_deployContracts.js
 */
 
 main()
