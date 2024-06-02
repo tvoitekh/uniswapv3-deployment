@@ -8,10 +8,10 @@ console.log(user);
     <v-app-bar app>
       <v-toolbar-title
         >Uniswap
-        <v-btn>Swap</v-btn>
-        <v-btn>Pool</v-btn>
-        <v-btn>Vote</v-btn>
-        <v-btn>Charts</v-btn>
+        <v-btn to="/swap">Swap</v-btn>
+        <v-btn to="/pool">Pool</v-btn>
+        <v-btn to="/vote">Vote</v-btn>
+        <v-btn to="/charts">Charts</v-btn>
       </v-toolbar-title>
       <v-spacer></v-spacer>
 
@@ -42,7 +42,7 @@ console.log(user);
   color: white;
 }
 
-button {
+.v-btn {
   text-transform: none;
 }
 </style>
