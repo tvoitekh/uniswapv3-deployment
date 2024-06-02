@@ -6,12 +6,14 @@ console.log(user);
 <template>
   <v-app>
     <v-app-bar app>
-      <v-toolbar-title
-        >Uniswap
-        <v-btn to="/swap">Swap</v-btn>
-        <v-btn to="/pool">Pool</v-btn>
-        <v-btn to="/vote">Vote</v-btn>
-        <v-btn to="/charts">Charts</v-btn>
+      <v-toolbar-title>
+        <v-app-bar-nav-icon @click="$router.push('/')" sele>
+          <v-img src="../public/dummiswap.png"></v-img>
+        </v-app-bar-nav-icon>
+        <v-btn @click="$router.push('/swap')">Swap</v-btn>
+        <v-btn @click="$router.push('/pool')">Pool</v-btn>
+        <v-btn @click="$router.push('/vote')">Vote</v-btn>
+        <v-btn @click="$router.push('/charts')">Charts</v-btn>
       </v-toolbar-title>
       <v-spacer></v-spacer>
 
@@ -44,5 +46,23 @@ console.log(user);
 
 .v-btn {
   text-transform: none;
+  :active {
+    background-color: white;
+  }
+}
+
+@keyframes wave {
+  0%,
+  100% {
+    transform: initial;
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+.v-img {
+  animation: wave 0.8s infinite;
+  width: 2rem;
+  height: 2rem;
 }
 </style>
