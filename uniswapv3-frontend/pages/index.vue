@@ -1,9 +1,13 @@
+<script lang="ts" setup>
+definePageMeta({
+  layout: "navbar",
+});
 
-
+useHead({
+  title: "HomePage",
+});
+</script>
 
 <template>
-  <div>
-    <!-- <NuxtWelcome /> -->
-    <h1>Uniswap V3</h1>
-  </div>
+  <h1>Yay! You're on the homepage!</h1>
 </template>
