@@ -9,5 +9,14 @@ useHead({
 </script>
 
 <template>
-  <h1>Yay! You're on the homepage!</h1>
+  <h1 class="custom-color-box">Yay! You're on the homepage!</h1>
 </template>
+
+<style lang="scss">
+.custom-color-box {
+  color: rgb(var(--v-theme-primary));
+  background-color: rgb(var(--v-theme-secondary));
+  padding: 20px;
+  border-radius: 4px;
+}
+</style>
