@@ -1,6 +1,5 @@
 <script setup>
 const user = useUserStore();
-console.log(user);
 </script>
 
 <template>
