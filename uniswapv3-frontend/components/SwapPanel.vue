@@ -1,9 +1,37 @@
 <script setup>
 import { mdiCog } from "@mdi/js";
+import AlphaRouterService from "../utils/AlphaRouterService";
 
 const user = useUserStore();
+const swap = useSwapStore();
 
+let fromToken = ref("USDT");
+let toToken = ref("");
+let slippageTolerance = ref(0.5);
+let alphaRouterService = ref(undefined);
+let price = ref(0);
+let isLoading = ref(false);
 const tokenList = ["USDT", "USDC", "WBTC"];
+const tokenProps = {
+  USDT: {
+    name: "Tether",
+    symbol: "USDT",
+    decimals: 18,
+    address: "0x0eD1B87Fd219a147dD77CE581D9e28e1Cbe39Da6",
+  },
+  USDC: {
+    name: "UsdCoin",
+    symbol: "USDC",
+    decimals: 18,
+    address: "0x5166328E361c038AaFA691caC1303cde569e02FA",
+  },
+  WBTC: {
+    name: "WrappedBitcoin",
+    symbol: "WBTC",
+    decimals: 18,
+    address: "0xdC4390ee59b9969F98B4783C69b70688568F3b68",
+  },
+};
 
 const isNumberRule = (v) => {
   return !isNaN(parseFloat(v));
@@ -12,10 +40,27 @@ const isDifferentToken = (v) => {
   return v !== fromToken.value;
 };
 
-let fromToken = ref("USDT");
-let toToken = ref("");
-let slippageTolerance = ref(0.5);
-let deadline = ref(2);
+watch([fromToken, toToken], async ([from, to]) => {
+  if (from && to) {
+    const fromTokenProps = tokenProps[from];
+    const toTokenProps = tokenProps[to];
+    isLoading.value = true;
+    alphaRouterService = new AlphaRouterService(fromTokenProps, toTokenProps);
+    price = alphaRouterService
+      .getPrice(
+        swap.inputAmount,
+        slippageTolerance,
+        Math.floor(Date.now() / 1000) + swap.deadline * 60,
+        user.signerAddress
+      )
+      .then((data) => {
+        swap.transaction = data.transaction;
+        swap.outputAmount = data.outputAmount;
+        swap.ratio = data.ratio;
+        isLoading.value = false;
+      });
+  }
+});
 </script>
 <template>
   <v-container>
@@ -39,8 +84,8 @@ let deadline = ref(2);
             ></v-text-field>
             <v-card-text>Deadline</v-card-text>
             <v-text-field
-              :ref="deadline"
-              v-model="deadline"
+              :ref="swap.deadline"
+              v-model="swap.deadline"
               variant="outlined"
               suffix="minutes"
               :rules="[isNumberRule]"
@@ -55,6 +100,7 @@ let deadline = ref(2);
             label="Sell"
             variant="solo"
             placeholder="0"
+            v-model="swap.inputAmount"
             :rules="[isNumberRule]"
           ></v-text-field>
           <v-select
@@ -69,6 +115,7 @@ let deadline = ref(2);
             label="Buy"
             variant="solo"
             placeholder="0"
+            v-model="swap.outputAmount"
             :rules="[isNumberRule]"
           ></v-text-field>
           <v-select
