@@ -15,7 +15,7 @@ const positions = ref([]);
       </v-card-title>
 
       <v-card-text>
-        <v-list v-if="position">
+        <v-list v-if="positions">
           <v-list-item-group>
             <v-list-item v-for="position in positions" :key="position.id">
               <v-list-item-content>
