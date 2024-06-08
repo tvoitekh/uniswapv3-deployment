@@ -9,7 +9,11 @@ const positions = ref([]);
     <v-card id="main">
       <v-card-title>
         <h2>Pool</h2>
-        <v-btn color="primary" class="white--text" variant="flat"
+        <v-btn
+          color="primary"
+          class="white--text"
+          variant="flat"
+          @click="$router.push('/addLiquidity')"
           >+ Add position</v-btn
         >
       </v-card-title>
