@@ -1,11 +1,21 @@
 <script setup lang="ts">
 import { ethers } from "ethers";
 import getTokensContract from "../utils/getTokenContract";
+let fees = [
+  { title: "0.01%", value: 100 },
+  { title: "0.05%", value: 500 },
+  { title: "0.3%", value: 3000 },
+  { title: "1%", value: 10000 },
+];
 const user = useUserStore();
 
 let fromToken = ref("USDT");
+let fromTokenAmount = ref(0);
+let toTokenAmount = ref(0);
 let toToken = ref("");
-let price = ref(0);
+let feeTier = ref("0.05%");
+let minPrice = ref(0);
+let maxPrice = ref(0);
 let isLoading = ref(false);
 let balances = ref([0, 0]);
 const tokenList = ["USDT", "USDC", "WBTC"];
@@ -31,7 +41,6 @@ const tokenProps = {
 };
 
 watch([fromToken, toToken], async ([from, to]) => {
-  console.log(from, to);
   const fromTokenContract = getTokensContract(tokenProps[from].address);
   const toTokenContract = getTokensContract(tokenProps[to].address);
 
@@ -43,7 +52,6 @@ watch([fromToken, toToken], async ([from, to]) => {
     tokenProps[from].decimals
   );
   toBalance = ethers.utils.formatUnits(toBalance, tokenProps[to].decimals);
-  console.log(typeof fromBalance, typeof toBalance);
 
   balances.value = [fromBalance, toBalance];
 });
@@ -63,6 +71,7 @@ const isDifferentToken = (v) => {
       </v-card-title>
       <v-card-text id="token-pair">
         <v-select
+          class="token"
           label="Token"
           v-model="fromToken"
           :items="tokenList"
@@ -70,6 +79,7 @@ const isDifferentToken = (v) => {
         ></v-select>
 
         <v-select
+          class="token"
           label="Token"
           v-model="toToken"
           :items="tokenList"
@@ -79,9 +89,47 @@ const isDifferentToken = (v) => {
       </v-card-text>
 
       <v-card-text>
+        <v-select
+          class="fee-tier"
+          label="Fee"
+          v-model="feeTier"
+          :items="fees"
+          variant="solo"
+        ></v-select>
+      </v-card-text>
+
+      <v-card-text>
+        <h3>Price</h3>
         <v-container>
           <v-text-field
-            label="Sell"
+            v-model="minPrice"
+            label="Min price"
+            variant="solo"
+            placeholder="0"
+            :rules="[isNumberRule]"
+            :hint="`${toToken} per ${fromToken}`"
+            persistent-hint
+          ></v-text-field>
+        </v-container>
+        <v-container>
+          <v-text-field
+            v-model="maxPrice"
+            label="Max price"
+            variant="solo"
+            placeholder="0"
+            :rules="[isNumberRule]"
+            :hint="`${toToken} per ${fromToken}`"
+            persistent-hint
+          ></v-text-field>
+        </v-container>
+      </v-card-text>
+
+      <v-card-text>
+        <h3>Saving amount</h3>
+        <v-container>
+          <v-text-field
+            v-model="fromTokenAmount"
+            :label="fromToken"
             variant="solo"
             placeholder="0"
             :rules="[isNumberRule]"
@@ -90,7 +138,8 @@ const isDifferentToken = (v) => {
         <span>Balance: {{ balances[0] }}</span>
         <v-container>
           <v-text-field
-            label="Buy"
+            v-model="toTokenAmount"
+            :label="toToken"
             variant="solo"
             placeholder="0"
             :rules="[isNumberRule]"
@@ -128,7 +177,12 @@ const isDifferentToken = (v) => {
   width: 50%;
 }
 .v-select {
-  max-width: 45%;
+  &.fee-tier {
+    width: 100%;
+  }
+  &.token {
+    max-width: 45%;
+  }
 }
 
 .v-card#menu {
@@ -141,7 +195,7 @@ const isDifferentToken = (v) => {
 }
 
 .v-card-text {
-  #token-pair {
+  &#token-pair {
     display: flex;
     justify-content: space-between;
   }
