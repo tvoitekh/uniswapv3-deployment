@@ -1,28 +1,39 @@
 <script setup lang="ts">
 import { ethers } from "ethers";
 import getTokensContract from "../utils/getTokenContract";
-import { getPoolAddress } from "../utils/getPoolData";
+import { getPoolAddress, getPoolData } from "../utils/getPoolData";
+import {
+  getAmount0AndLiquidity,
+  getAmount1AndLiquidity,
+} from "../utils/positionCalculation";
 import deployPool from "../utils/deployPool";
+import getPriceFromSqrtPriceX96 from "../utils/getPriceFromSqrtPriceX96";
+import getTickFromPrice from "../utils/getTickFromPrice";
+import addLiquidity from "../utils/addLiquidity";
 
 const NULL_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 let fees = [
-  { title: "0.01%", value: 100 },
-  { title: "0.05%", value: 500 },
-  { title: "0.3%", value: 3000 },
-  { title: "1%", value: 10000 },
+  { title: "0.01%", value: 100, tickSpacing: 1 },
+  { title: "0.05%", value: 500, tickSpacing: 10 },
+  { title: "0.3%", value: 3000, tickSpacing: 60 },
+  { title: "1%", value: 10000, tickSpacing: 200 },
 ];
 const user = useUserStore();
+console.log(user.signer.instance, user.signerAddress);
 
 let fromToken = ref("USDT");
 let fromTokenAmount = ref(0);
-let toTokenAmount = ref(0);
-let poolAddress = ref(undefined);
-let isLoadingPool = ref(false);
 let toToken = ref("");
+let toTokenAmount = ref(0);
+let liquidity = ref(0);
+let poolAddress = ref(undefined);
+let poolData = ref(undefined);
+let price = ref(undefined);
+let isLoadingPool = ref(false);
 let fee = ref(500);
-let tickLower = ref(0);
-let tickUpper = ref(0);
+let priceUpper = ref(0);
+let priceLower = ref(0);
 let isLoading = ref(false);
 let balances = ref([0, 0]);
 const tokenList = ["USDT", "USDC", "WBTC"];
@@ -65,7 +76,29 @@ watch([fromToken, toToken, fee], async ([from, to, fee]) => {
 
   balances.value = [fromBalance, toBalance];
   poolAddress.value = await getPoolAddress(token0Address, token1Address, fee);
+  poolData.value = await getPoolData(token0Address, token1Address, fee);
+  price.value = getPriceFromSqrtPriceX96(poolData.value.sqrtRatioX96);
+  priceLower.value = price.value * 0.9;
+  priceUpper.value = price.value * 1.1;
   isLoadingPool.value = false;
+});
+
+watch(fromTokenAmount, async (amount) => {
+  [toTokenAmount.value, liquidity.value] = await getAmount0AndLiquidity(
+    amount,
+    price.value,
+    priceLower.value,
+    priceUpper.value
+  );
+});
+
+watch(toTokenAmount, async (amount) => {
+  [fromTokenAmount.value, liquidity.value] = await getAmount1AndLiquidity(
+    amount,
+    price.value,
+    priceLower.value,
+    priceUpper.value
+  );
 });
 
 const isNumberRule = (v) => {
@@ -80,6 +113,23 @@ const createPool = async () => {
     tokenProps[fromToken.value].address,
     tokenProps[toToken.value].address,
     fee.value
+  );
+};
+
+const handleAddLiquidity = async () => {
+  console.log(user.signer);
+  const tickSpacing = fees.find((f) => f.value === fee.value).tickSpacing;
+  await addLiquidity(
+    user.signer.instance,
+    tokenProps[fromToken.value],
+    tokenProps[toToken.value],
+    fromTokenAmount.value,
+    toTokenAmount.value,
+    liquidity.value,
+    priceLower.value,
+    priceUpper.value,
+    tickSpacing,
+    poolData.value
   );
 };
 </script>
@@ -141,11 +191,11 @@ const createPool = async () => {
       </v-card-text>
 
       <v-card-text>
-        <h3>Price</h3>
+        <h3>Current Price: {{ price }}</h3>
         <v-container>
           <v-text-field
-            v-model="tickLower"
-            label="Min price"
+            v-model="priceLower"
+            label="Lower price"
             variant="solo"
             placeholder="0"
             :rules="[isNumberRule]"
@@ -155,8 +205,8 @@ const createPool = async () => {
         </v-container>
         <v-container>
           <v-text-field
-            v-model="tickUpper"
-            label="Max price"
+            v-model="priceUpper"
+            label="Upper price"
             variant="solo"
             placeholder="0"
             :rules="[isNumberRule]"
@@ -167,7 +217,7 @@ const createPool = async () => {
       </v-card-text>
 
       <v-card-text>
-        <h3>Saving amount</h3>
+        <h3>Deposit amount</h3>
         <v-container>
           <v-text-field
             v-model="fromTokenAmount"
@@ -198,7 +248,13 @@ const createPool = async () => {
           variant="tonal"
           >Connect Your Wallet!!!</v-btn
         >
-        <v-btn v-else color="primary" variant="flat" class="white--text">
+        <v-btn
+          v-else
+          color="primary"
+          variant="flat"
+          class="white--text"
+          @click="handleAddLiquidity"
+        >
           Add
         </v-btn>
       </v-card-actions>

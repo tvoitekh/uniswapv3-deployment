@@ -32,7 +32,7 @@ export async function getPoolAddress(
 }
 
 // 創建一個函數來獲取池數據
-async function getPoolData(
+export async function getPoolData(
   token0Address: string,
   token1Address: string,
   fee: number
@@ -82,79 +82,4 @@ async function getPoolData(
   );
 
   return pool;
-}
-
-// 計算 amount1
-function calculateAmount1(
-  pool: Pool,
-  amount0: ethers.BigNumber,
-  tickLower: number,
-  tickUpper: number
-) {
-  const position = new Position({
-    pool,
-    liquidity: Position.fromAmounts({
-      pool,
-      tickLower: nearestUsableTick(tickLower, pool.tickSpacing),
-      tickUpper: nearestUsableTick(tickUpper, pool.tickSpacing),
-      amount0: amount0.toString(), // 假設您有這個值
-      amount1: "0", // 我們不直接指定 amount1
-      useFullPrecision: true,
-    }).liquidity,
-    tickLower: nearestUsableTick(tickLower, pool.tickSpacing),
-    tickUpper: nearestUsableTick(tickUpper, pool.tickSpacing),
-  });
-
-  return position.amount1.toString();
-}
-
-function calculateAmount0(
-  pool: Pool,
-  amount1: ethers.BigNumber,
-  tickLower: number,
-  tickUpper: number
-) {
-  const position = new Position({
-    pool,
-    liquidity: Position.fromAmounts({
-      pool,
-      tickLower: nearestUsableTick(tickLower, pool.tickSpacing),
-      tickUpper: nearestUsableTick(tickUpper, pool.tickSpacing),
-      amount0: "0", // 我們不直接指定 amount0
-      amount1: amount1.toString(), // 假設您有這個值
-      useFullPrecision: true,
-    }).liquidity,
-    tickLower: nearestUsableTick(tickLower, pool.tickSpacing),
-    tickUpper: nearestUsableTick(tickUpper, pool.tickSpacing),
-  });
-  return position.amount0.toString();
-}
-
-// 主函數
-export async function getAmount1ForLiquidity(
-  token0: string,
-  token1: string,
-  fee: number,
-  amount0: string,
-  tickLower: number,
-  tickUpper: number
-) {
-  const pool = await getPoolData(token0, token1, fee);
-  const amount0Parsed = ethers.utils.parseEther(amount0); // 您希望添加的資本量
-  const amount1 = calculateAmount1(pool, amount0Parsed, tickLower, tickUpper);
-  return amount1;
-}
-
-export async function getAmount0ForLiquidity(
-  token0: string,
-  token1: string,
-  fee: number,
-  amount1: string,
-  tickLower: number,
-  tickUpper: number
-) {
-  const pool = await getPoolData(token0, token1, fee);
-  const amount1Parsed = ethers.utils.parseEther(amount1); // 您希望添加的資本量
-  const amount0 = calculateAmount0(pool, amount1Parsed, tickLower, tickUpper);
-  return amount0;
 }
