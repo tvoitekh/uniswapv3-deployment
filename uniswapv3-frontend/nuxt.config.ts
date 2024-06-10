@@ -15,6 +15,9 @@ export default defineNuxtConfig({
       });
     },
   ],
+  runtimeConfig: {
+    NET_URL: process.env.NET_URL,
+  },
 
   vite: {
     vue: {
