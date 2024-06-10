@@ -1,6 +1,11 @@
 <script setup lang="ts">
 import { ethers } from "ethers";
 import getTokensContract from "../utils/getTokenContract";
+import { getPoolAddress } from "../utils/getPoolData";
+import deployPool from "../utils/deployPool";
+
+const NULL_ADDRESS = "0x0000000000000000000000000000000000000000";
+
 let fees = [
   { title: "0.01%", value: 100 },
   { title: "0.05%", value: 500 },
@@ -12,10 +17,12 @@ const user = useUserStore();
 let fromToken = ref("USDT");
 let fromTokenAmount = ref(0);
 let toTokenAmount = ref(0);
+let poolAddress = ref(undefined);
+let isLoadingPool = ref(false);
 let toToken = ref("");
-let feeTier = ref("0.05%");
-let minPrice = ref(0);
-let maxPrice = ref(0);
+let fee = ref(500);
+let tickLower = ref(0);
+let tickUpper = ref(0);
 let isLoading = ref(false);
 let balances = ref([0, 0]);
 const tokenList = ["USDT", "USDC", "WBTC"];
@@ -40,9 +47,12 @@ const tokenProps = {
   },
 };
 
-watch([fromToken, toToken], async ([from, to]) => {
-  const fromTokenContract = getTokensContract(tokenProps[from].address);
-  const toTokenContract = getTokensContract(tokenProps[to].address);
+watch([fromToken, toToken, fee], async ([from, to, fee]) => {
+  isLoadingPool.value = true;
+  const token0Address = tokenProps[from].address;
+  const token1Address = tokenProps[to].address;
+  const fromTokenContract = getTokensContract(token0Address);
+  const toTokenContract = getTokensContract(token1Address);
 
   let fromBalance = await fromTokenContract.balanceOf(user.signerAddress);
   let toBalance = await toTokenContract.balanceOf(user.signerAddress);
@@ -54,6 +64,8 @@ watch([fromToken, toToken], async ([from, to]) => {
   toBalance = ethers.utils.formatUnits(toBalance, tokenProps[to].decimals);
 
   balances.value = [fromBalance, toBalance];
+  poolAddress.value = await getPoolAddress(token0Address, token1Address, fee);
+  isLoadingPool.value = false;
 });
 
 const isNumberRule = (v) => {
@@ -61,6 +73,14 @@ const isNumberRule = (v) => {
 };
 const isDifferentToken = (v) => {
   return v !== fromToken.value;
+};
+
+const createPool = async () => {
+  await deployPool(
+    tokenProps[fromToken.value].address,
+    tokenProps[toToken.value].address,
+    fee.value
+  );
 };
 </script>
 <template>
@@ -92,17 +112,39 @@ const isDifferentToken = (v) => {
         <v-select
           class="fee-tier"
           label="Fee"
-          v-model="feeTier"
+          v-model="fee"
           :items="fees"
           variant="solo"
         ></v-select>
       </v-card-text>
 
       <v-card-text>
+        <div v-if="isLoadingPool">
+          <v-progress-circular
+            indeterminate
+            color="primary"
+          ></v-progress-circular>
+        </div>
+        <div v-else-if="poolAddress == NULL_ADDRESS">
+          <span>No such pool </span>
+          <v-btn
+            color="primary"
+            variant="flat"
+            class="white--text"
+            @click="createPool"
+            >Create one</v-btn
+          >
+        </div>
+        <div v-else-if="poolAddress">
+          <span>Pool address: {{ poolAddress }}. Nice Pool (⁎⁍̴̛ᴗ⁍̴̛⁎)</span>
+        </div>
+      </v-card-text>
+
+      <v-card-text>
         <h3>Price</h3>
         <v-container>
           <v-text-field
-            v-model="minPrice"
+            v-model="tickLower"
             label="Min price"
             variant="solo"
             placeholder="0"
@@ -113,7 +155,7 @@ const isDifferentToken = (v) => {
         </v-container>
         <v-container>
           <v-text-field
-            v-model="maxPrice"
+            v-model="tickUpper"
             label="Max price"
             variant="solo"
             placeholder="0"
