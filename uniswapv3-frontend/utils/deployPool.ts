@@ -2,6 +2,7 @@ import { ethers, Contract, BigNumber, Signer } from "ethers"; // Import the ethe
 import bn from "bignumber.js";
 import UniswapV3Factory from "@uniswap/v3-core/artifacts/contracts/UniswapV3Factory.sol/UniswapV3Factory.json"; // Import the UniswapV3Factory contract ABI
 import NonFungiblePositionManager from "@uniswap/v3-periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json"; // Import the NonfungiblePositionManager contract ABI
+bn.config({ EXPONENTIAL_AT: 999999, DECIMAL_PLACES: 40 }); // Configure bignumber.js settings
 
 const POSITION_MANAGER_ADDRESS = "0xec7e3FBebC673E05e667b5d39455585083DA9b7A";
 const FACTORY_ADDRESS = "0xCd0A15Af740acE905cD22FA87b443AA2ecFeCD4d";

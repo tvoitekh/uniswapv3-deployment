@@ -76,7 +76,12 @@ watch([fromToken, toToken, fee], async ([from, to, fee]) => {
 
   balances.value = [fromBalance, toBalance];
   poolAddress.value = await getPoolAddress(token0Address, token1Address, fee);
-  poolData.value = await getPoolData(token0Address, token1Address, fee);
+  try {
+    poolData.value = await getPoolData(token0Address, token1Address, fee);
+  } catch (e) {
+    console.log(e);
+    isLoadingPool.value = false;
+  }
   price.value = getPriceFromSqrtPriceX96(poolData.value.sqrtRatioX96);
   priceLower.value = price.value * 0.9;
   priceUpper.value = price.value * 1.1;
@@ -112,7 +117,8 @@ const createPool = async () => {
   await deployPool(
     tokenProps[fromToken.value].address,
     tokenProps[toToken.value].address,
-    fee.value
+    fee.value,
+    user.signer.instance
   );
 };
 
