@@ -3,7 +3,8 @@ import { ethers, Signer, Contract } from "ethers";
 import { Pool, Position } from "@uniswap/v3-sdk";
 import getTickFromPrice from "./getTickFromPrice";
 import NonfungiblePositionManager from "@uniswap/v3-periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json";
-
+import TETHER_JSON from "../../artifacts/contracts/Tether.sol/Tether.json";
+const ERC20_ABI = TETHER_JSON.abi;
 const POSITION_MANAGER_ADDRESS = "0xec7e3FBebC673E05e667b5d39455585083DA9b7A";
 
 export default async function addLiquidity(
@@ -18,8 +19,12 @@ export default async function addLiquidity(
   tickSpacing: number,
   pool: Pool
 ) {
-  const fromTokenContract = getTokenContract(token0Props.address);
-  const toTokenContract = getTokenContract(token1Props.address);
+  const fromTokenContract = new ethers.Contract(
+    token0Props.address,
+    ERC20_ABI,
+    signer
+  );
+  const toTokenContract = getTokenContract(token1Props.address, signer);
 
   const fromTokenAmountInWei = ethers.utils.parseUnits(
     fromTokenAmount.toString(),

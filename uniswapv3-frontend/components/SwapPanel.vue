@@ -1,14 +1,23 @@
 <script setup>
 import { mdiCog } from "@mdi/js";
-import AlphaRouterService from "../utils/AlphaRouterService";
+import getTokenContract from "../utils/getTokenContract";
+import { ethers } from "ethers";
 
 const user = useUserStore();
 const swap = useSwapStore();
+let fees = [
+  { title: "0.01%", value: 100, tickSpacing: 1 },
+  { title: "0.05%", value: 500, tickSpacing: 10 },
+  { title: "0.3%", value: 3000, tickSpacing: 60 },
+  { title: "1%", value: 10000, tickSpacing: 200 },
+];
 
 let fromToken = ref("USDT");
+let fromTokenBalance = ref(0);
 let toToken = ref("");
+let toTokenBalance = ref(0);
 let slippageTolerance = ref(0.5);
-let alphaRouterService = ref(undefined);
+let fee = ref(500);
 let price = ref(0);
 let isLoading = ref(false);
 const tokenList = ["USDT", "USDC", "WBTC"];
@@ -40,25 +49,26 @@ const isDifferentToken = (v) => {
   return v !== fromToken.value;
 };
 
-watch([fromToken, toToken], async ([from, to]) => {
+watch([fromToken, toToken, fee], async ([from, to, fee]) => {
   if (from && to) {
     const fromTokenProps = tokenProps[from];
     const toTokenProps = tokenProps[to];
-    isLoading.value = true;
-    alphaRouterService = new AlphaRouterService(fromTokenProps, toTokenProps);
-    price = alphaRouterService
-      .getPrice(
-        swap.inputAmount,
-        slippageTolerance,
-        Math.floor(Date.now() / 1000) + swap.deadline * 60,
-        user.signerAddress
-      )
-      .then((data) => {
-        swap.transaction = data.transaction;
-        swap.outputAmount = data.outputAmount;
-        swap.ratio = data.ratio;
-        isLoading.value = false;
-      });
+
+    const fromTokenContract = getTokenContract(fromTokenProps.address);
+    const toTokenContract = getTokenContract(toTokenProps.address);
+
+    fromTokenBalance.value = await fromTokenContract.balanceOf(
+      user.signerAddress
+    );
+    fromTokenBalance.value = ethers.utils.formatUnits(
+      fromTokenBalance.value,
+      fromTokenProps.decimals
+    );
+    toTokenBalance.value = await toTokenContract.balanceOf(user.signerAddress);
+    toTokenBalance.value = ethers.utils.formatUnits(
+      toTokenBalance.value,
+      toTokenProps.decimals
+    );
   }
 });
 </script>
@@ -110,6 +120,7 @@ watch([fromToken, toToken], async ([from, to]) => {
             variant="solo"
           ></v-select>
         </v-container>
+        <span>Balance: {{ fromTokenBalance }}</span>
         <v-container>
           <v-text-field
             label="Buy"
@@ -126,6 +137,7 @@ watch([fromToken, toToken], async ([from, to]) => {
             :rules="[isDifferentToken]"
           ></v-select>
         </v-container>
+        <span>Balance: {{ toTokenBalance }}</span>
       </v-card-text>
 
       <v-card-actions>
