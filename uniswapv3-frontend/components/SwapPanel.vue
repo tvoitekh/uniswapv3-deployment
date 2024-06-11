@@ -2,6 +2,7 @@
 import { mdiCog } from "@mdi/js";
 import getTokenContract from "../utils/getTokenContract";
 import { ethers } from "ethers";
+import getQuote from "../utils/getQuote";
 
 const user = useUserStore();
 const swap = useSwapStore();
@@ -50,25 +51,29 @@ const isDifferentToken = (v) => {
 };
 
 watch([fromToken, toToken, fee], async ([from, to, fee]) => {
-  if (from && to) {
-    const fromTokenProps = tokenProps[from];
-    const toTokenProps = tokenProps[to];
+  const fromTokenProps = tokenProps[from];
+  const toTokenProps = tokenProps[to];
 
-    const fromTokenContract = getTokenContract(fromTokenProps.address);
-    const toTokenContract = getTokenContract(toTokenProps.address);
+  const fromTokenContract = getTokenContract(fromTokenProps.address);
+  const toTokenContract = getTokenContract(toTokenProps.address);
 
-    fromTokenBalance.value = await fromTokenContract.balanceOf(
-      user.signerAddress
-    );
-    fromTokenBalance.value = ethers.utils.formatUnits(
-      fromTokenBalance.value,
-      fromTokenProps.decimals
-    );
-    toTokenBalance.value = await toTokenContract.balanceOf(user.signerAddress);
-    toTokenBalance.value = ethers.utils.formatUnits(
-      toTokenBalance.value,
-      toTokenProps.decimals
-    );
+  fromTokenBalance.value = await fromTokenContract.balanceOf(
+    user.signerAddress
+  );
+  fromTokenBalance.value = ethers.utils.formatUnits(
+    fromTokenBalance.value,
+    fromTokenProps.decimals
+  );
+  toTokenBalance.value = await toTokenContract.balanceOf(user.signerAddress);
+  toTokenBalance.value = ethers.utils.formatUnits(
+    toTokenBalance.value,
+    toTokenProps.decimals
+  );
+
+  try {
+    await getQuote(fromTokenProps, toTokenProps, fee);
+  } catch (e) {
+    console.log(e);
   }
 });
 </script>

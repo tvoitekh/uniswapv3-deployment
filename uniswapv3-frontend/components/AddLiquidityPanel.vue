@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ethers } from "ethers";
 import getTokensContract from "../utils/getTokenContract";
-import { getPoolAddress, getPoolData } from "../utils/getPoolData";
+import { getPoolAddress, getPool } from "../utils/getPoolData";
 import {
   getAmount0AndLiquidity,
   getAmount1AndLiquidity,
@@ -77,7 +77,7 @@ watch([fromToken, toToken, fee], async ([from, to, fee]) => {
   balances.value = [fromBalance, toBalance];
   poolAddress.value = await getPoolAddress(token0Address, token1Address, fee);
   try {
-    poolData.value = await getPoolData(token0Address, token1Address, fee);
+    poolData.value = await getPool(token0Address, token1Address, fee);
   } catch (e) {
     console.log(e);
     isLoadingPool.value = false;
