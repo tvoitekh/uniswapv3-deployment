@@ -11,6 +11,5 @@ export default function (tokenAddress: string, signer?: Signer): Contract {
   if (signer === undefined) {
     signer = web3Provider as any;
   }
-  console.log("signer", signer, web3Provider);
   return new ethers.Contract(tokenAddress, ERC20_ABI, signer);
 }
