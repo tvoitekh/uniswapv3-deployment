@@ -32,7 +32,7 @@ export async function getPoolAddress(
 }
 
 // 創建一個函數來獲取池數據
-export async function getPoolData(
+export async function getPool(
   token0Address: string,
   token1Address: string,
   fee: number
@@ -55,6 +55,7 @@ export async function getPoolData(
     poolContract.slot0().then((result: any) => result[1]),
     poolContract.tickSpacing(),
   ]);
+  poolContract.slot0().then((result: any) => console.log(result));
 
   const token0 = new Token(
     48899,

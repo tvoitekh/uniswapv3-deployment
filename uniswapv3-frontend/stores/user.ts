@@ -1,6 +1,14 @@
 import { defineStore } from "pinia";
 import { ethers } from "ethers";
 
+const network = {
+  chainId: 48899, // Optimism's chain ID
+  name: "zircuit",
+  _defaultProvider: ethers.providers.getDefaultProvider(
+    "https://zircuit1.p2pify.com"
+  ),
+};
+
 export const useUserStore = defineStore("user", {
   state: () => ({
     provider: shallowReactive({
@@ -10,28 +18,17 @@ export const useUserStore = defineStore("user", {
       instance: undefined as ethers.Signer | undefined,
     }),
     signerAddress: undefined as string | undefined,
-    counter: 0,
   }),
   actions: {
     async connect() {
-      try {
-        this.counter += 1;
-        console.log(this.counter);
-        console.log("Initializing provider...");
-        this.provider.instance = await new ethers.providers.Web3Provider(
-          (window as any).ethereum
-        );
+      this.provider.instance = await new ethers.providers.Web3Provider(
+        (window as any).ethereum,
+        network as any
+      );
 
-        console.log("Requesting accounts...");
-        await this.provider.instance.send("eth_requestAccounts", []);
-        console.log("Getting signer...");
-        this.signer.instance = this.provider.instance.getSigner();
-        console.log("Getting signer address...");
-        this.signerAddress = await this.signer.instance.getAddress();
-        console.log("Connected:", this.signerAddress);
-      } catch (error) {
-        console.error("Error during connection:", error);
-      }
+      await this.provider.instance.send("eth_requestAccounts", []);
+      this.signer.instance = this.provider.instance.getSigner();
+      this.signerAddress = await this.signer.instance.getAddress();
     },
   },
 });

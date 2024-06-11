@@ -9,7 +9,7 @@ useHead({
 </script>
 
 <template>
-  <h1 class="custom-color-box">Yay! You're on the swap!</h1>
+  <SwapPanel />
 </template>
 
 <style lang="scss">
